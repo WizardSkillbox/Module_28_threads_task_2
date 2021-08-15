@@ -9,18 +9,6 @@ using namespace std;
 
 #define NUM_OF_TRAINS (3)
 
-class BinaryFlag {
-    mutex dataAccess;
-public:
-    void occupy() {
-        dataAccess.lock();
-    }
-
-    void release() {
-        dataAccess.unlock();
-    }
-};
-
 static string GetStringFromStream(const string &message) {
     std::string str;
     while (true) {
@@ -53,13 +41,13 @@ static int GetIntFromStream(const string &message, int min, int max) {
     return num;
 }
 
-static void train(const string &name, int timeInWay, BinaryFlag *railwayPlace) {
+static void train(const string &name, int timeInWay, mutex *railwayPlace) {
     assert(nullptr != railwayPlace);
 
     cout << "Train " << name << " has started the movement" << endl;
     this_thread::sleep_for(chrono::seconds(timeInWay));
     cout << "Train " << name << " is waiting for the place..." << endl;
-    railwayPlace->occupy();
+    railwayPlace->lock();
     cout << "Train " << name << " has arrived to the railway station" << endl;
 
     string cmd;
@@ -67,13 +55,13 @@ static void train(const string &name, int timeInWay, BinaryFlag *railwayPlace) {
         cmd = GetStringFromStream("Enter 'depart' to leave the station: ");
     }
     cout << "Train " << name << " has leaved the railway station" << endl;
-    railwayPlace->release();
+    railwayPlace->unlock();
 }
 
 int main() {
     const string trainNames[NUM_OF_TRAINS] = {"Train A", "Train B", "Train C"};
     thread *calls[NUM_OF_TRAINS];
-    BinaryFlag railwayPlace;
+    mutex railwayPlace;
 
     int timesInWay[NUM_OF_TRAINS];
 
